@@ -49,7 +49,6 @@ function load_level(file_name, width, height, load_level_ctx)
     function override_level(ctx)
         local level_files = {
             file_name,
-            '../../CustomLevels/buffer.lvl',
             '../../CustomLevels/empty_rooms.lvl',
             '../../CustomLevels/icecavesarea.lvl'
         }
