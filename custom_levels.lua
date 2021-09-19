@@ -25,14 +25,10 @@ function unload_level()
     custom_level_state.file_name = nil
     custom_level_state.width = nil
     custom_level_state.height = nil
-    if custom_level_state.load_files_callback then
-        clear_callback(custom_level_state.load_files_callback)
-    end
     if custom_level_state.room_generation_callback then
         clear_callback(custom_level_state.room_generation_callback)
     end
 
-    custom_level_state.load_files_callback = nil
     custom_level_state.room_generation_callback = nil
 end
 
