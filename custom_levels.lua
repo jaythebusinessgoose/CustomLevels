@@ -19,6 +19,7 @@ for x = 0, 7 do
 	room_templates[x] = room_templates_x
 end
 
+-- Resets the state to remove references to the loaded file and removes callbacks that alter the level.
 function unload_level()
     if not custom_level_state.active then return end
     custom_level_state.active = false
@@ -32,6 +33,13 @@ function unload_level()
     custom_level_state.room_generation_callback = nil
 end
 
+-- Load in a level file.
+-- file_name: name/path to the file to load.
+-- width: Width of the level in the file.
+-- height: Height of the level in the file.
+-- load_level_ctx: Context to load the level file into.
+--
+-- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
 function load_level(file_name, width, height, load_level_ctx)
     unload_level()
     custom_level_state.active = true
