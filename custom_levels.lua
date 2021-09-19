@@ -18,9 +18,6 @@ for x = 0, 7 do
 	end
 	room_templates[x] = room_templates_x
 end
-local buffer_template = define_room_template("buffer", ROOM_TEMPLATE_TYPE.NONE)
-local buffer_hard_template = define_room_template("buffer_hard", ROOM_TEMPLATE_TYPE.NONE)
-local buffer_special_template = define_room_template("buffer_special", ROOM_TEMPLATE_TYPE.NONE)
 
 function unload_level()
     if not custom_level_state.active then return end
