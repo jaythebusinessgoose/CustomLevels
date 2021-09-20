@@ -25,13 +25,9 @@ end, ON.PRE_LOAD_LEVEL_FILES)
 ## Procedural Spawns
 
 Random spawns such as crates, rocks, webs, gold, and embedded items, are removed by default so that only
-manually spawned items exist. For some of these items, this means that tile codes that add the item will not spawn the item. To work around that, a new method must be called immediately before spawning an entity that should be kept:
+manually spawned items exist. For some of these items, this means that tile codes that add the item will not spawn the item.
 
-```
-force_allow_next_spawn()
-```
-
-This means that custom tile codes must be created to spawn these entities.
+It should work to create a custom tile code to spawn in the entity and manually spawn it in the script.
 
 The following entities must be forced to spawn during level generation:
 - ENT_TYPE.EMBED_GOLD
