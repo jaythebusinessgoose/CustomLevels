@@ -199,7 +199,7 @@ function load_level(file_name, width, height, load_level_ctx, allowed_spawn_type
     custom_level_state.procedural_spawn_callback = set_post_entity_spawn(function(entity, spawn_flags)
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.PROCEDURAL) then return end
         -- Do not remove spawns from a script.
-        if spawn_flags & SPAWN_TYPE.SCRIPT then return end
+        if spawn_flags & SPAWN_TYPE.SCRIPT ~= 0 then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
@@ -208,7 +208,7 @@ function load_level(file_name, width, height, load_level_ctx, allowed_spawn_type
     custom_level_state.embedded_currency_callback = set_post_entity_spawn(function(entity, spawn_flags)
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.EMBEDDED_CURRENCY) then return end
         -- Do not remove spawns from a script.
-        if spawn_flags & SPAWN_TYPE.SCRIPT then return end
+        if spawn_flags & SPAWN_TYPE.SCRIPT ~= 0 then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
@@ -217,7 +217,7 @@ function load_level(file_name, width, height, load_level_ctx, allowed_spawn_type
     custom_level_state.embedded_item_callback = set_post_entity_spawn(function(entity, spawn_flags)
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.EMBEDDED_ITEMS) then return end
         -- Do not remove spawns from a script.
-        if spawn_flags & SPAWN_TYPE.SCRIPT then return end
+        if spawn_flags & SPAWN_TYPE.SCRIPT ~= 0 then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
