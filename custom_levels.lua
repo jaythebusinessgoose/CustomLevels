@@ -8,6 +8,9 @@ local custom_level_state = {
     embedded_currency_callback = nil,
     embedded_item_callback = nil,
     allowed_spawn_types = 0,
+
+    entrance_tc = nil,
+    entrance_remove_callback = nil,
 }
 
 -- Create a bunch of room templates that can be used in lvl files to create rooms. The maximum
@@ -110,17 +113,27 @@ function unload_level()
     if custom_level_state.room_generation_callback then
         clear_callback(custom_level_state.room_generation_callback)
     end
+    custom_level_state.room_generation_callback = nil
     if custom_level_state.procedural_spawn_callback then
         clear_callback(custom_level_state.procedural_spawn_callback)
     end
+    custom_level_state.procedural_spawn_callback = nil
     if custom_level_state.embedded_currency_callback then
         clear_callback(custom_level_state.embedded_currency_callback)
     end
+    custom_level_state.embedded_currency_callback = nil
     if custom_level_state.embedded_item_callback then
         clear_callback(custom_level_state.embedded_item_callback)
     end
-
-    custom_level_state.room_generation_callback = nil
+    custom_level_state.embedded_item_callback = nil
+    if custom_level_state.entrance_tc then
+        clear_callback(custom_level_state.entrance_tc)
+    end
+    custom_level_state.entrance_tc = nil
+    if custom_level_state.entrance_remove_callback then
+        clear_callback(custom_level_state.entrance_remove_callback)
+    end
+    custom_level_state.entrance_remove_callback = nil
 end
 
 -- Load in a level file.
@@ -160,6 +173,33 @@ function load_level(file_name, width, height, load_level_ctx, allowed_spawn_type
             end
         end
     end, ON.POST_ROOM_GENERATION)
+
+    ----------------------------
+    ---- HIDE ENTRANCE DOOR ----
+    ----------------------------
+
+    local entranceX
+    local entranceY
+    local entranceLayer
+
+    custom_level_state.entrance_tc = set_pre_tile_code_callback(function(x, y, layer)
+        entranceX = math.floor(x)
+        entranceY = math.floor(y)
+        entranceLayer = layer
+        return false
+    end, "entrance")
+
+    custom_level_state.entrance_remove_callback = set_post_entity_spawn(function (entity)
+        if not entranceX or not entranceY or not entranceLayer then return end
+        local px, py, pl = get_position(entity.uid)
+        if math.abs(px - entranceX) < 1 and math.abs(py - entranceY) < 1 and pl == entranceLayer then
+            kill_entity(entity.uid)
+        end
+    end, SPAWN_TYPE.ANY, 0, ENT_TYPE.BG_DOOR)
+
+    -----------------------------
+    ---- /HIDE ENTRANCE DOOR ----
+    -----------------------------
 
     custom_level_state.procedural_spawn_callback = set_post_entity_spawn(function(entity)
         if force_spawn_next_item then
