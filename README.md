@@ -73,7 +73,7 @@ When loading a level, there is an optional last parameter that can be set to all
 
 This will allow all spawns except for gold and gems embedded in the wall:
 ```
-	local allowed_spawns = set_flag(0, custom_levels.ALLOW_SPAWN_TYPE.PROCEDURAL)
+    local allowed_spawns = set_flag(0, custom_levels.ALLOW_SPAWN_TYPE.PROCEDURAL)
     allowed_spawns = set_flag(allowed_spawns, custom_levels.ALLOW_SPAWN_TYPE.EMBEDDED_ITEMS)
     custom_levels.load_level(file_name, width, height, ctx, allowed_spawns)
 ```
