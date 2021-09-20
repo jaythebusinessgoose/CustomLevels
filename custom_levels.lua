@@ -7,6 +7,7 @@ local custom_level_state = {
     procedural_spawn_callback = nil,
     embedded_currency_callback = nil,
     embedded_item_callback = nil,
+    allowed_spawn_types = 0,
 }
 
 -- Create a bunch of room templates that can be used in lvl files to create rooms. The maximum
@@ -91,10 +92,17 @@ local removed_embedded_items = {
     ENT_TYPE.ITEM_MACHETE,
 }
 
+local ALLOW_SPAWN_TYPE = {
+    PROCEDURAL = 1,
+    EMBEDDED_CURRENCY = 2,
+    EMBEDDED_ITEMS = 3,
+}
+
 -- Resets the state to remove references to the loaded file and removes callbacks that alter the level.
 function unload_level()
     if not custom_level_state.active then return end
     force_spawn_next_item = false
+    allowed_spawn_types = 0
     custom_level_state.active = false
     custom_level_state.file_name = nil
     custom_level_state.width = nil
@@ -122,12 +130,15 @@ end
 -- load_level_ctx: Context to load the level file into.
 --
 -- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
-function load_level(file_name, width, height, load_level_ctx)
+function load_level(file_name, width, height, load_level_ctx, allowed_spawn_types)
+    allowed_spawn_types = allowed_spawn_types or 0
+
     unload_level()
     custom_level_state.active = true
     custom_level_state.file_name = file_name
     custom_level_state.width = width
     custom_level_state.height = height
+    custom_level_state.allowed_spawn_types = allowed_spawn_types
 
     function override_level(ctx)
         local level_files = {
@@ -155,6 +166,7 @@ function load_level(file_name, width, height, load_level_ctx)
             force_spawn_next_item = false
             return
         end
+        if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.PROCEDURAL) then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
@@ -165,6 +177,7 @@ function load_level(file_name, width, height, load_level_ctx)
             force_spawn_next_item = false
             return
         end
+        if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.EMBEDDED_CURRENCY) then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
@@ -175,6 +188,7 @@ function load_level(file_name, width, height, load_level_ctx)
             force_spawn_next_item = false
             return
         end
+        if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.EMBEDDED_ITEMS) then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
@@ -186,4 +200,5 @@ return {
     load_level = load_level,
     unload_level = unload_level,
     force_allow_next_spawn = force_allow_next_spawn,
+    ALLOW_SPAWN_TYPE = ALLOW_SPAWN_TYPE,
 }

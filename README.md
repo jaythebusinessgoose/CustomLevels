@@ -66,6 +66,18 @@ The following entities must be forced to spawn during level generation:
 - ENT_TYPE.ITEM_BOOMERANG
 - ENT_TYPE.ITEM_MACHETE
 
+When loading a level, there is an optional last parameter that can be set to allow the game to do its spawns during generation. There are three types of spawns that can be separately configured via a bitmask `ALLOW_SPAWN_TYPE`:
+- `PROCEDURAL` (Items in the level, such as gold, pots, crates, ghost pot, etc)
+- `EMBEDDED_CURRENCY` (Gold and gems embedded in the wall)
+- `EMBEDDED_ITEMS` (Items such as backpacks, weapons, and powerups embedded in the wall)
+
+This will allow all spawns except for gold and gems embedded in the wall:
+```
+	local allowed_spawns = set_flag(0, custom_levels.ALLOW_SPAWN_TYPE.PROCEDURAL)
+    allowed_spawns = set_flag(allowed_spawns, custom_levels.ALLOW_SPAWN_TYPE.EMBEDDED_ITEMS)
+    custom_levels.load_level(file_name, width, height, ctx, allowed_spawns)
+```
+
 ## Back layers
 
 To set the back layer of a level, mark the template as `\!dual` and include the back layer tiles in line after the front layer tiles.
