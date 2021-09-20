@@ -22,6 +22,50 @@ set_callback(function(ctx)
 end, ON.PRE_LOAD_LEVEL_FILES)
 ```
 
+## Procedural Spawns
+
+Random spawns such as crates, rocks, webs, gold, and embedded items, are removed by default so that only
+manually spawned items exist. For some of these items, this means that tile codes that add the item will not spawn the item. To work around that, a new method must be called immediately before spawning an entity that should be kept:
+
+```
+force_allow_next_spawn()
+```
+
+This means that custom tile codes must be created to spawn these entities.
+
+The following entities must be forced to spawn during level generation:
+- ENT_TYPE.EMBED_GOLD
+- ENT_TYPE.EMBED_GOLD_BIG
+- ENT_TYPE.ITEM_RUBY
+- ENT_TYPE.ITEM_SAPPHIRE
+- ENT_TYPE.ITEM_EMERALD
+- ENT_TYPE.ITEM_ALIVE_EMBEDDED_ON_ICE
+- ENT_TYPE.ITEM_PICKUP_ROPEPILE
+- ENT_TYPE.ITEM_PICKUP_BOMBBAG
+- ENT_TYPE.ITEM_PICKUP_BOMBBOX
+- ENT_TYPE.ITEM_PICKUP_SPECTACLES
+- ENT_TYPE.ITEM_PICKUP_CLIMBINGGLOVES
+- ENT_TYPE.ITEM_PICKUP_PITCHERSMITT
+- ENT_TYPE.ITEM_PICKUP_SPRINGSHOES
+- ENT_TYPE.ITEM_PICKUP_SPIKESHOES
+- ENT_TYPE.ITEM_PICKUP_PASTE
+- ENT_TYPE.ITEM_PICKUP_COMPASS
+- ENT_TYPE.ITEM_PICKUP_PARACHUTE
+- ENT_TYPE.ITEM_CAPE
+- ENT_TYPE.ITEM_JETPACK
+- ENT_TYPE.ITEM_TELEPORTER_BACKPACK
+- ENT_TYPE.ITEM_HOVERPACK
+- ENT_TYPE.ITEM_POWERPACK
+- ENT_TYPE.ITEM_WEBGUN
+- ENT_TYPE.ITEM_SHOTGUN
+- ENT_TYPE.ITEM_FREEZERAY
+- ENT_TYPE.ITEM_CROSSBOW
+- ENT_TYPE.ITEM_CAMERA
+- ENT_TYPE.ITEM_TELEPORTER
+- ENT_TYPE.ITEM_MATTOCK
+- ENT_TYPE.ITEM_BOOMERANG
+- ENT_TYPE.ITEM_MACHETE
+
 ## Back layers
 
 To set the back layer of a level, mark the template as `\!dual` and include the back layer tiles in line after the front layer tiles.
