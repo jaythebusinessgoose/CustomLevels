@@ -25,11 +25,6 @@ for x = 0, 7 do
 	room_templates[x] = room_templates_x
 end
 
-local force_spawn_next_item = false
-local function force_allow_next_spawn()
-    force_spawn_next_item = true
-end
-
 local removed_procedural_spawns = {
 	ENT_TYPE.ITEM_TORCH,
 	ENT_TYPE.MONS_PET_DOG,
@@ -201,34 +196,28 @@ function load_level(file_name, width, height, load_level_ctx, allowed_spawn_type
     ---- /HIDE ENTRANCE DOOR ----
     -----------------------------
 
-    custom_level_state.procedural_spawn_callback = set_post_entity_spawn(function(entity)
-        if force_spawn_next_item then
-            force_spawn_next_item = false
-            return
-        end
+    custom_level_state.procedural_spawn_callback = set_post_entity_spawn(function(entity, spawn_flags)
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.PROCEDURAL) then return end
+        -- Do not remove spawns from a script.
+        if spawn_flags & SPAWN_TYPE.SCRIPT then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
     end, SPAWN_TYPE.LEVEL_GEN_GENERAL, 0, removed_procedural_spawns)
 
-    custom_level_state.embedded_currency_callback = set_post_entity_spawn(function(entity)
-        if force_spawn_next_item then
-            force_spawn_next_item = false
-            return
-        end
+    custom_level_state.embedded_currency_callback = set_post_entity_spawn(function(entity, spawn_flags)
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.EMBEDDED_CURRENCY) then return end
+        -- Do not remove spawns from a script.
+        if spawn_flags & SPAWN_TYPE.SCRIPT then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
     end, SPAWN_TYPE.LEVEL_GEN, 0, removed_embedded_currencies)
 
-    custom_level_state.embedded_item_callback = set_post_entity_spawn(function(entity)
-        if force_spawn_next_item then
-            force_spawn_next_item = false
-            return
-        end
+    custom_level_state.embedded_item_callback = set_post_entity_spawn(function(entity, spawn_flags)
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.EMBEDDED_ITEMS) then return end
+        -- Do not remove spawns from a script.
+        if spawn_flags & SPAWN_TYPE.SCRIPT then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
@@ -239,6 +228,5 @@ return {
     state = custom_level_state,
     load_level = load_level,
     unload_level = unload_level,
-    force_allow_next_spawn = force_allow_next_spawn,
     ALLOW_SPAWN_TYPE = ALLOW_SPAWN_TYPE,
 }
