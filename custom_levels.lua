@@ -7,6 +7,7 @@ local custom_level_state = {
     procedural_spawn_callback = nil,
     embedded_currency_callback = nil,
     embedded_item_callback = nil,
+    floor_spread_callback = nil,
     allowed_spawn_types = 0,
 
     entrance_tc = nil,
@@ -121,6 +122,10 @@ function unload_level()
         clear_callback(custom_level_state.embedded_item_callback)
     end
     custom_level_state.embedded_item_callback = nil
+    if custom_level_state.floor_spread_callback then
+        clear_callback(custom_level_state.floor_spread_callback)
+    end
+    custom_level_state.floor_spread_callback = nil
     if custom_level_state.entrance_tc then
         clear_callback(custom_level_state.entrance_tc)
     end
@@ -222,6 +227,12 @@ function load_level(file_name, width, height, load_level_ctx, allowed_spawn_type
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
     end, SPAWN_TYPE.LEVEL_GEN, 0, removed_embedded_items)
+
+    custom_level_state.floor_spread_callback = set_post_entity_spawn(function(entity)
+        entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
+        move_entity(entity.uid, 1000, 0, 0, 0)
+        entity:destroy()
+    end, SPAWN_TYPE.LEVEL_GEN_FLOOR_SPREADING, 0)
 end
 
 return {
