@@ -1,3 +1,7 @@
+local custom_level_params = {
+    custom_levels_directory = 'CustomLevels',
+}
+
 local custom_level_state = {
     active = false,
     file_name = nil,
@@ -97,11 +101,14 @@ local ALLOW_SPAWN_TYPE = {
     EMBEDDED_ITEMS = 3,
 }
 
+local function set_directory(directory)
+    custom_level_params.custom_levels_directory = directory
+end
+
 -- Resets the state to remove references to the loaded file and removes callbacks that alter the level.
-function unload_level()
+local function unload_level()
     if not custom_level_state.active then return end
-    force_spawn_next_item = false
-    allowed_spawn_types = 0
+    custom_level_state.allowed_spawn_types = 0
     custom_level_state.active = false
     custom_level_state.file_name = nil
     custom_level_state.width = nil
@@ -143,7 +150,7 @@ end
 -- load_level_ctx: Context to load the level file into.
 --
 -- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
-function load_level(file_name, width, height, load_level_ctx, allowed_spawn_types)
+local function load_level(file_name, width, height, load_level_ctx, allowed_spawn_types)
     allowed_spawn_types = allowed_spawn_types or 0
 
     unload_level()
@@ -153,11 +160,12 @@ function load_level(file_name, width, height, load_level_ctx, allowed_spawn_type
     custom_level_state.height = height
     custom_level_state.allowed_spawn_types = allowed_spawn_types
 
+    local custom_levels_directory = custom_level_params.custom_levels_directory
     function override_level(ctx)
         local level_files = {
             file_name,
-            '../../CustomLevels/empty_rooms.lvl',
-            '../../CustomLevels/icecavesarea.lvl'
+            f'../../{custom_levels_directory}/empty_rooms.lvl',
+            f'../../{custom_levels_directory}/icecavesarea.lvl'
         }
         ctx:override_level_files(level_files)
     end
@@ -240,4 +248,5 @@ return {
     load_level = load_level,
     unload_level = unload_level,
     ALLOW_SPAWN_TYPE = ALLOW_SPAWN_TYPE,
+    set_directory = set_directory,
 }

@@ -22,6 +22,10 @@ set_callback(function(ctx)
 end, ON.PRE_LOAD_LEVEL_FILES)
 ```
 
+### Configuration
+
+Due to the way level files are loaded in, some extra configuration is required if the CustomLevels package is relocated. If it is anywhere other than the root directory of the mod, or has a name other than CustomLevels, `set_directory` must be called, passing the path to the directory within the mod folder including the directory name. Eg, for `MyCoolMod/SweetFolder/CustomLevels/custom_levels.lua` call `custom_levels.set_directory('SweetFolder/CustomLevels')`.
+
 ## Procedural Spawns
 
 Random spawns such as crates, rocks, webs, gold, and embedded items, are removed by default so that only
