@@ -191,6 +191,7 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
     local entranceLayer
 
     custom_level_state.entrance_tc = set_pre_tile_code_callback(function(x, y, layer)
+        if state.screen == 13 then return end
         entranceX = math.floor(x)
         entranceY = math.floor(y)
         entranceLayer = layer
