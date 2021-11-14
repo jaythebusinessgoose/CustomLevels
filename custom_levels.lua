@@ -52,6 +52,7 @@ local removed_procedural_spawns = {
 	ENT_TYPE.ITEM_WALLTORCH,
 	ENT_TYPE.MONS_SCARAB,
 	ENT_TYPE.ITEM_AUTOWALLTORCH,
+	ENT_TYPE.ITEM_TORCH,
 	ENT_TYPE.ITEM_WEB,
 	ENT_TYPE.ITEM_GOLDBAR,
 	ENT_TYPE.ITEM_GOLDBARS,
@@ -218,7 +219,7 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
-    end, SPAWN_TYPE.LEVEL_GEN_GENERAL, 0, removed_procedural_spawns)
+    end, SPAWN_TYPE.LEVEL_GEN_GENERAL | SPAWN_TYPE.LEVEL_GEN_PROCEDURAL, 0, removed_procedural_spawns)
 
     custom_level_state.embedded_currency_callback = set_post_entity_spawn(function(entity, spawn_flags)
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.EMBEDDED_CURRENCY) then return end
