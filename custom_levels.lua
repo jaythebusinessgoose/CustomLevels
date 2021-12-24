@@ -216,6 +216,7 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
         -- Do not remove spawns from a script.
         if spawn_flags & SPAWN_TYPE.SCRIPT ~= 0 then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
+        entity.flags = set_flag(entity.flags, ENT_FLAG.DEAD)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
     end, SPAWN_TYPE.LEVEL_GEN_GENERAL | SPAWN_TYPE.LEVEL_GEN_PROCEDURAL, 0, removed_procedural_spawns)
@@ -225,6 +226,7 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
         -- Do not remove spawns from a script.
         if spawn_flags & SPAWN_TYPE.SCRIPT ~= 0 then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
+        entity.flags = set_flag(entity.flags, ENT_FLAG.DEAD)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
     end, SPAWN_TYPE.LEVEL_GEN_TILE_CODE, 0, removed_embedded_currencies)
@@ -234,6 +236,7 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
         -- Do not remove spawns from a script.
         if spawn_flags & SPAWN_TYPE.SCRIPT ~= 0 then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
+        entity.flags = set_flag(entity.flags, ENT_FLAG.DEAD)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
     end, SPAWN_TYPE.LEVEL_GEN_TILE_CODE, 0, removed_embedded_items)
