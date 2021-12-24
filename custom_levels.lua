@@ -228,7 +228,7 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
-    end, SPAWN_TYPE.LEVEL_GEN, 0, removed_embedded_currencies)
+    end, SPAWN_TYPE.LEVEL_GEN_TILE_CODE, 0, removed_embedded_currencies)
 
     custom_level_state.embedded_item_callback = set_post_entity_spawn(function(entity, spawn_flags)
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.EMBEDDED_ITEMS) then return end
@@ -237,7 +237,7 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
-    end, SPAWN_TYPE.LEVEL_GEN, 0, removed_embedded_items)
+    end, SPAWN_TYPE.LEVEL_GEN_TILE_CODE, 0, removed_embedded_items)
 
     custom_level_state.floor_spread_callback = set_post_entity_spawn(function(entity)
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
