@@ -31,7 +31,6 @@ for x = 0, 7 do
 end
 
 local removed_procedural_spawns = {
-	ENT_TYPE.ITEM_TORCH,
 	ENT_TYPE.MONS_PET_DOG,
 	ENT_TYPE.ITEM_BONES,
 	ENT_TYPE.EMBED_GOLD,
