@@ -1,5 +1,6 @@
 local custom_level_params = {
     custom_levels_directory = 'CustomLevels',
+    hide_entrance = true,
 }
 
 local custom_level_state = {
@@ -106,6 +107,10 @@ local function set_directory(directory)
     custom_level_params.custom_levels_directory = directory
 end
 
+local function set_hide_entrance(hide_entrance)
+    custom_level_params.hide_entrance = hide_entrance
+end
+
 -- Resets the state to remove references to the loaded file and removes callbacks that alter the level.
 local function unload_level()
     if not custom_level_state.active then return end
@@ -201,6 +206,7 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
 
     custom_level_state.entrance_remove_callback = set_post_entity_spawn(function (entity)
         if not entranceX or not entranceY or not entranceLayer then return end
+        if not custom_level_params.hide_entrance then return end
         local px, py, pl = get_position(entity.uid)
         if math.abs(px - entranceX) < 1 and math.abs(py - entranceY) < 1 and pl == entranceLayer then
             kill_entity(entity.uid)
@@ -254,4 +260,5 @@ return {
     unload_level = unload_level,
     ALLOW_SPAWN_TYPE = ALLOW_SPAWN_TYPE,
     set_directory = set_directory,
+    set_hide_entrance = set_hide_entrance,
 }
