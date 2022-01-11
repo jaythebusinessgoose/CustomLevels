@@ -241,6 +241,9 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.EMBEDDED_ITEMS) then return end
         -- Do not remove spawns from a script.
         if spawn_flags & SPAWN_TYPE.SCRIPT ~= 0 then return end
+        -- local grid_entity = get_grid_entity_at(entity.x, entity.y, entity.layer)
+        -- print(f'{grid_entity}')
+        -- if grid_entity == -1 then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         entity.flags = set_flag(entity.flags, ENT_FLAG.DEAD)
         move_entity(entity.uid, 1000, 0, 0, 0)
