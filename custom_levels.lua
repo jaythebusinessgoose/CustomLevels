@@ -13,6 +13,7 @@ local custom_level_state = {
     embedded_currency_callback = nil,
     embedded_item_callback = nil,
     floor_spread_callback = nil,
+    bat_callback = nil,
     allowed_spawn_types = 0,
 
     entrance_tc = nil,
@@ -101,6 +102,7 @@ local ALLOW_SPAWN_TYPE = {
     PROCEDURAL = 1,
     EMBEDDED_CURRENCY = 2,
     EMBEDDED_ITEMS = 3,
+    BACKLAYER_BATS = 4,
 }
 
 local function set_directory(directory)
@@ -139,6 +141,10 @@ local function unload_level()
         clear_callback(custom_level_state.floor_spread_callback)
     end
     custom_level_state.floor_spread_callback = nil
+    if custom_level_state.bat_callback then
+        clear_callback(custom_level_state.bat_callback)
+    end
+    custom_level_state.bat_callback = nil
     if custom_level_state.entrance_tc then
         clear_callback(custom_level_state.entrance_tc)
     end
@@ -248,6 +254,15 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
         move_entity(entity.uid, 1000, 0, 0, 0)
         entity:destroy()
     end, SPAWN_TYPE.LEVEL_GEN_TILE_CODE, 0, removed_embedded_items)
+
+    custom_level_state.bat_callback = set_post_entity_spawn(function(entity, spawn_type)
+        if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.BACKLAYER_BATS) then return end
+        -- Do not remove spawns from a script.
+        if spawn_type & SPAWN_TYPE.SCRIPT ~= 0 then return end
+        entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
+        entity.flags = set_flag(entity.flags, ENT_FLAG.DEAD)
+        entity:destroy()
+    end, SPAWN_TYPE.LEVEL_GEN_GENERAL, 0, ENT_TYPE.MONS_BAT)
 
     custom_level_state.floor_spread_callback = set_post_entity_spawn(function(entity)
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
