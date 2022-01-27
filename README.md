@@ -83,6 +83,7 @@ When loading a level, there is an optional last parameter that can be set to all
 - `PROCEDURAL` (Items in the level, such as gold, pots, crates, ghost pot, etc)
 - `EMBEDDED_CURRENCY` (Gold and gems embedded in the wall)
 - `EMBEDDED_ITEMS` (Items such as backpacks, weapons, and powerups embedded in the wall)
+- `BACKLAYER_BATS` (Bats that naturally spawn in back layers)
 
 This will allow all spawns except for gold and gems embedded in the wall:
 ```
