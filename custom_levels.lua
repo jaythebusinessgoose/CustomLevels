@@ -190,7 +190,9 @@ local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn
     if load_level_ctx then
         override_level(load_level_ctx)
     end
-    force_custom_theme(custom_theme)
+    if custom_theme then
+        force_custom_theme(custom_theme)
+    end
     custom_level_state.room_generation_callback = set_callback(function(ctx)
         if width and height then
             state.height = height
