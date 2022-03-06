@@ -1,3 +1,6 @@
+--- Load in custom levels with static level gen.
+-- @module CustomLevels
+
 local custom_level_params = {
     custom_levels_directory = 'CustomLevels',
     hide_entrance = true,
@@ -159,11 +162,11 @@ local function unload_level()
     custom_level_state.entrance_remove_callback = nil
 end
 
--- Load in a level file.
--- file_name: name/path to the file to load.
--- width: Width of the level in the file.
--- height: Height of the level in the file.
--- load_level_ctx: Context to load the level file into.
+--- Load in a level file. b
+-- @param load_level_ctx ON.PRE_LOAD_LEVEL_FILES context to load the level file into.
+-- @param file_name name/path to the file to load.
+-- @param width Width of the level in the file.
+-- @param height Height of the level in the file.
 --
 -- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
 local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn_types, width, height)
@@ -278,11 +281,12 @@ local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn
 end
 
 
--- Load in a level file.
--- file_name: name/path to the file to load.
--- width: Width of the level in the file.
--- height: Height of the level in the file.
--- load_level_ctx: Context to load the level file into.
+--- Load in a level file. c
+-- @param file_name name/path to the file to load.
+-- @param width Width of the level in the file.
+-- @param height Height of the level in the file.
+-- @param load_level_ctx ON.PRE_LOAD_LEVEL_FILES context to load the level file into.
+-- @param allowed_spawn_types Optional spawn types flags to allow certain types of procedural spawns to spawn without being eliminated.
 --
 -- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
 local function load_level_legacy(file_name, width, height, load_level_ctx, allowed_spawn_types)
@@ -425,7 +429,7 @@ local function create_custom_theme(theme_properties, level_file)
         end)
     end
     custom_theme:post(THEME_OVERRIDE.SPAWN_LEVEL, function()
-        if custom_theme.dont_spawn_growables then return end
+        if theme_properties.dont_spawn_growables then return end
         local growables = theme_properties.growables or theme_properties.enabled_growables or theme_properties.growable_spawn_types or GROWABLE_SPAWN_TYPE.ALL
         local poles = growables & GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES == GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES
         local chains = growables & GROWABLE_SPAWN_TYPE.CHAINS == GROWABLE_SPAWN_TYPE.CHAINS
@@ -506,7 +510,14 @@ local function create_custom_theme(theme_properties, level_file)
     return custom_theme, subtheme
 end
 
-local function load_level_custom_theme(load_level_ctx, file_name, custom_theme, allowed_spawn_types, width, height)
+--- Load in a level file. d
+-- @param load_level_ctx ON.PRE_LOAD_LEVEL_FILES context to load the level file into.
+-- @param file_name name/path to the file to load.
+-- @param custom_theme Either a CustomTheme object or a table of parameters to configure a new CustomTheme.
+-- @param allowed_spawn_types Optional spawn types flags to allow certain types of procedural spawns to spawn without being eliminated.
+--
+-- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
+local function load_level_custom_theme(load_level_ctx, file_name, custom_theme, allowed_spawn_types)
     local actual_custom_theme = nil
     if custom_theme then
         if type(custom_theme) == "userdata" and getmetatable(custom_theme).__type.name == "CustomTheme" then
@@ -519,11 +530,11 @@ local function load_level_custom_theme(load_level_ctx, file_name, custom_theme, 
         end
     end
 
-    load_level(load_level_ctx, file_name, actual_custom_theme, allowed_spawn_types, width, height)
+    load_level(load_level_ctx, file_name, actual_custom_theme, allowed_spawn_types)
 end
 
 
-return {
+local CustomLevels = {
     state = custom_level_state,
     load_level = load_level_legacy,
     load_level_custom_theme = load_level_custom_theme,
@@ -534,3 +545,6 @@ return {
     BORDER_THEME = BORDER_THEME,
     GROWABLE_SPAWN_TYPE = GROWABLE_SPAWN_TYPE,
 }
+
+
+return CustomLevels
