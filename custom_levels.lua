@@ -1,3 +1,6 @@
+--- Load in custom levels with static level gen.
+-- @module CustomLevels
+
 local custom_level_params = {
     custom_levels_directory = 'CustomLevels',
     hide_entrance = true,
@@ -18,6 +21,9 @@ local custom_level_state = {
 
     entrance_tc = nil,
     entrance_remove_callback = nil,
+
+    custom_theme_id = 4000,
+    custom_theme = nil,
 }
 
 -- Create a bunch of room templates that can be used in lvl files to create rooms. The maximum
@@ -121,6 +127,7 @@ local function unload_level()
     custom_level_state.file_name = nil
     custom_level_state.width = nil
     custom_level_state.height = nil
+    custom_level_state.custom_theme = nil
     if custom_level_state.room_generation_callback then
         clear_callback(custom_level_state.room_generation_callback)
     end
@@ -155,14 +162,14 @@ local function unload_level()
     custom_level_state.entrance_remove_callback = nil
 end
 
--- Load in a level file.
--- file_name: name/path to the file to load.
--- width: Width of the level in the file.
--- height: Height of the level in the file.
--- load_level_ctx: Context to load the level file into.
+--- Load in a level file. b
+-- @param load_level_ctx ON.PRE_LOAD_LEVEL_FILES context to load the level file into.
+-- @param file_name name/path to the file to load.
+-- @param width Width of the level in the file.
+-- @param height Height of the level in the file.
 --
 -- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
-local function load_level(file_name, width, height, load_level_ctx, allowed_spawn_types)
+local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn_types, width, height)
     allowed_spawn_types = allowed_spawn_types or 0
 
     unload_level()
@@ -171,24 +178,28 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
     custom_level_state.width = width
     custom_level_state.height = height
     custom_level_state.allowed_spawn_types = allowed_spawn_types
+    custom_level_state.custom_theme = custom_theme
 
     local custom_levels_directory = custom_level_params.custom_levels_directory
     function override_level(ctx)
         local level_files = {
             file_name,
-            f'../../{custom_levels_directory}/empty_rooms.lvl',
-            f'../../{custom_levels_directory}/icecavesarea.lvl'
         }
         ctx:override_level_files(level_files)
     end
     if load_level_ctx then
         override_level(load_level_ctx)
     end
+    if custom_theme then
+        force_custom_theme(custom_theme)
+    end
     custom_level_state.room_generation_callback = set_callback(function(ctx)
-        state.height = height
-        state.width = width
-        for x = 0, width - 1 do
-            for y = 0, height - 1 do
+        if width and height then
+            state.height = height
+            state.width = width
+        end
+        for x = 0, state.width - 1 do
+            for y = 0, state.height - 1 do
                 ctx:set_room_template(x, y, LAYER.FRONT, room_templates[x][y])
             end
         end
@@ -271,11 +282,272 @@ local function load_level(file_name, width, height, load_level_ctx, allowed_spaw
     end, SPAWN_TYPE.LEVEL_GEN_FLOOR_SPREADING, 0)
 end
 
-return {
+
+--- Load in a level file. c
+-- @param file_name name/path to the file to load.
+-- @param width Width of the level in the file.
+-- @param height Height of the level in the file.
+-- @param load_level_ctx ON.PRE_LOAD_LEVEL_FILES context to load the level file into.
+-- @param allowed_spawn_types Optional spawn types flags to allow certain types of procedural spawns to spawn without being eliminated.
+--
+-- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
+local function load_level_legacy(file_name, width, height, load_level_ctx, allowed_spawn_types)
+    return load_level(load_level_ctx, file_name, nil, allowed_spawn_types, width, height)
+end
+
+local BORDER_THEME = {
+    DEFAULT = 1,
+    HARD_FLOOR = 2,
+    SUNKEN_CITY = 3,
+    NEO_BABYLON = 4,
+    ICE_CAVES = 5,
+    ICE_SUNKEN = 6,
+    ICE_BABY = 7,
+    DUAT = 8,
+    NONE = 9,
+    COSMIC_OCEAN = 10,
+    TIAMAT = 11,
+}
+local GROWABLE_SPAWN_TYPE = {
+    NONE = 0,
+    CHAINS = 1,
+    TIDE_POOL_POLES = 2,
+    VINES = 4,
+}
+GROWABLE_SPAWN_TYPE.ALL = GROWABLE_SPAWN_TYPE.CHAINS | GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES | GROWABLE_SPAWN_TYPE.VINES
+
+local function theme_for_border_theme(border_theme)
+    if border_theme == BORDER_THEME.DEFAULT or border_theme == BORDER_THEME.NONE then
+        return nil
+    elseif border_theme == BORDER_THEME.HARD_FLOOR then
+        return THEME.DWELLING
+    elseif border_theme == BORDER_THEME.SUNKEN_CITY then
+        return THEME.SUNKEN_CITY
+    elseif border_theme == BORDER_THEME.NEO_BABYLON then
+        return THEME.NEO_BABYLON
+    elseif border_theme == BORDER_THEME.ICE_CAVES or border_theme == BORDER_THEME.ICE_SUNKEN or border_theme == BORDER_THEME.ICE_BABY then
+        return THEME.ICE_CAVES
+    elseif border_theme == BORDER_THEME.DUAT then
+        return THEME.DUAT
+    elseif border_theme == BORDER_THEME.TIAMAT then
+        return THEME.TIAMAT
+    elseif border_theme == BORDER_THEME.COSMIC_OCEAN then
+        return THEME.COSMIC_OCEAN
+    end
+end
+local function entity_theme_for_border_theme(border_theme)
+    if border_theme == BORDER_THEME.ICE_SUNKEN then
+        return THEME.SUNKEN_CITY
+    elseif border_theme == BORDER_THEME.ICE_BABY then
+        return THEME.NEO_BABYLON
+    end
+    return theme_for_border_theme(border_theme)
+end
+local function background_texture_for_theme(theme)
+    if theme == THEME.DWELLING or theme == THEME.BASE_CAMP or theme == THEME.COSMIC_OCEAN then
+        return TEXTURE.DATA_TEXTURES_BG_CAVE_0
+    elseif theme == THEME.VOLCANA then
+        return TEXTURE.DATA_TEXTURES_BG_VOLCANO_0
+    elseif theme == THEME.JUNGLE then
+        return TEXTURE.DATA_TEXTURES_BG_JUNGLE_0
+    elseif theme == THEME.OLMEC then
+        return TEXTURE.DATA_TEXTURES_BG_STONE_0
+    elseif theme == THEME.TIDE_POOL or theme == THEME.ABZU or theme == THEME.TIAMAT then
+        return TEXTURE.DATA_TEXTURES_BG_TIDEPOOL_0
+    elseif theme == THEME.TEMPLE or theme == THEME.DUAT then
+        return TEXTURE.DATA_TEXTURES_BG_TEMPLE_0
+    elseif theme == THEME.CITY_OF_GOLD then
+        return TEXTURE.DATA_TEXTURES_BG_GOLD_0
+    elseif theme == THEME.ICE_CAVES then
+        return TEXTURE.DATA_TEXTURES_BG_ICE_0
+    elseif theme == THEME.NEO_BABYLON then
+        return TEXTURE.DATA_TEXTURES_BG_BABYLON_0
+    elseif theme == THEME.SUNKEN_CITY or theme == THEME.HUNDUN then
+        return TEXTURE.DATA_TEXTURES_BG_SUNKEN_0
+    elseif theme == THEME.EGGPLANT_WORLD then
+        return TEXTURE.DATA_TEXTURES_BG_EGGPLANT_0
+    end
+end
+
+local function floor_texture_for_theme(theme)
+    if theme == THEME.DWELLING then
+        return TEXTURE.DATA_TEXTURES_FLOOR_CAVE_0
+    elseif theme == THEME.BASE_CAMP then
+        return TEXTURE.DATA_TEXTURES_FLOOR_SURFACE_0
+    elseif theme == THEME.VOLCANA then
+        return TEXTURE.DATA_TEXTURES_FLOOR_VOLCANO_0
+    elseif theme == THEME.JUNGLE or theme == THEME.OLMEC then
+        return TEXTURE.DATA_TEXTURES_FLOOR_JUNGLE_0
+    elseif theme == THEME.TIDE_POOL or theme == THEME.TIAMAT or theme == THEME.ABZU then
+        return TEXTURE.DATA_TEXTURES_FLOOR_TIDEPOOL_0
+    elseif theme == THEME.TEMPLE or theme == THEME.DUAT or theme == THEME.CITY_OF_GOLD then
+        return TEXTURE.DATA_TEXTURES_FLOOR_TEMPLE_0
+    elseif theme == THEME.ICE_CAVES then
+        return TEXTURE.DATA_TEXTURES_FLOOR_ICE_0
+    elseif theme == THEME.NEO_BABYLON then
+        return TEXTURE.DATA_TEXTURES_FLOOR_BABYLON_0
+    elseif theme == THEME.SUNKEN_CITY or theme == THEME.HUNDUN then
+        return TEXTURE.DATA_TEXTURES_FLOOR_SUNKEN_0
+    elseif theme == THEME.EGGPLANT_WORLD then
+        return TEXTURE.DATA_TEXTURES_FLOOR_EGGPLANT_0
+    end
+    return TEXTURE.DATA_TEXTURES_FLOOR_CAVE_0
+end
+local function create_custom_theme(theme_properties, level_file)
+    local theme = theme_properties.theme
+    local subtheme = theme_properties.subtheme or theme_properties.co_subtheme
+    local border_theme = theme_properties.theme
+    local border_entity_theme = theme_properties.theme
+    local border = theme_properties.border_type or theme_properties.border
+    if border then
+        if border == BORDER_THEME.NONE then
+            border_theme = false
+            border_entity_theme = false
+        else
+            border_theme = theme_for_border_theme(border) or border_theme
+            border_entity_theme = entity_theme_for_border_theme(border) or border_entity_theme
+        end
+    end
+    border_theme = theme_properties.border_theme or border_theme
+    border_entity_theme = theme_properties.border_entity_theme or border_entity_theme
+
+    local custom_theme = CustomTheme:new(custom_level_state.custom_theme_id, theme)
+    custom_level_state.custom_theme_id = custom_level_state.custom_theme_id + 1
+    if not theme_properties.dont_spawn_effects then
+        custom_theme:override(THEME_OVERRIDE.SPAWN_EFFECTS, theme)
+    end
+    custom_theme:override(THEME_OVERRIDE.SPAWN_BORDER, border_theme)
+    custom_theme:override(THEME_OVERRIDE.ENT_BORDER, border_entity_theme)
+    if not theme_properties.dont_init then
+        custom_theme:override(THEME_OVERRIDE.INIT_LEVEL, border_theme)
+    end
+    if (border_theme == THEME.COSMIC_OCEAN and not theme_properties.dont_loop) or theme_properties.loop then
+        custom_theme:override(THEME_OVERRIDE.LOOP, THEME.COSMIC_OCEAN)
+    end
+    if theme_properties.width or theme_properties.height then
+        custom_theme:post(THEME_OVERRIDE.INIT_LEVEL, function()
+            if theme_properties.width then state.width = theme_properties.width end
+            if theme_properties.height then state.height = theme_properties.height end
+        end)
+    end
+    custom_theme:post(THEME_OVERRIDE.SPAWN_LEVEL, function()
+        if theme_properties.dont_spawn_growables then return end
+        local growables = theme_properties.growables or theme_properties.enabled_growables or theme_properties.growable_spawn_types or GROWABLE_SPAWN_TYPE.ALL
+        local poles = growables & GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES == GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES
+        local chains = growables & GROWABLE_SPAWN_TYPE.CHAINS == GROWABLE_SPAWN_TYPE.CHAINS
+        local vines = growables & GROWABLE_SPAWN_TYPE.VINES == GROWABLE_SPAWN_TYPE.VINES
+        if (poles and chains and vines) or (poles and chains) then
+            -- Cannot have poles and chains without also including vines.
+            state.level_gen.themes[THEME.BASE_CAMP]:spawn_traps() -- Spawn chains and vines.
+            state.level_gen.themes[THEME.TIDE_POOL]:spawn_traps() -- Spawn tide poles and sliding doors.
+        elseif chains and vines then
+            state.level_gen.themes[THEME.VOLCANA]:spawn_traps() -- Spawn chains and sliding doors.
+            state.level_gen.themes[THEME.JUNGLE]:spawn_traps() -- Spawn vines.
+        elseif vines and poles then
+            state.level_gen.themes[THEME.TIDE_POOL]:spawn_traps() -- Spawn tide poles and sliding doors.
+            state.level_gen.themes[THEME.JUNGLE]:spawn_traps() -- Spawn vines.
+        elseif vines then
+            state.level_gen.themes[THEME.EGGPLANT_WORLD]:spawn_traps() -- Spawn vines and sliding doors.
+        elseif poles then
+            state.level_gen.themes[THEME.TIDE_POOL]:spawn_traps() -- Spawn tide poles and sliding doors.
+        elseif chains then
+            state.level_gen.themes[THEME.VOLCANA]:spawn_traps() -- Spawn chains and sliding doors.
+        else
+            state.level_gen.themes[THEME.CITY_OF_GOLD]:spawn_traps() -- Spawn sliding doors.
+        end
+    end)
+    custom_theme:post(THEME_OVERRIDE.SPAWN_EFFECTS, function()
+        if state.screen ~= SCREEN.LEVEL then return end
+        if not theme_properties.dont_adjust_camera_focus then
+            state.camera.adjusted_focus_x = state.level_gen.spawn_x
+            state.camera.adjusted_focus_y = state.level_gen.spawn_y + 0.05
+        end
+        if theme_properties.camera_bounds then
+            state.camera.bounds_left = theme_properties.camera_bounds.left
+            state.camera.bounds_right = theme_properties.camera_bounds.right
+            state.camera.bounds_top = theme_properties.camera_bounds.top
+            state.camera.bounds_bottom = theme_properties.camera_bounds.bottom
+        elseif not theme_properties.dont_adjust_camera_bounds then
+            if border_theme == THEME.COSMIC_OCEAN then
+                state.camera.bounds_left = -math.huge
+                state.camera.bounds_top = math.huge
+                state.camera.bounds_right = math.huge
+                state.camera.bounds_bottom = -math.huge
+            end
+        end
+    end)
+
+    if theme_properties.background_theme then
+        custom_theme.textures[DYNAMIC_TEXTURE.BACKGROUND] = background_texture_for_theme(theme_properties.background_theme) or TEXTURE.DATA_TEXTURES_BG_CAVE_0
+
+        custom_theme:override(THEME_OVERRIDE.ENT_BACKWALL, theme_properties.background_theme)
+        custom_theme:override(THEME_OVERRIDE.SPAWN_BACKGROUND, theme_properties.background_theme)
+    end
+
+    if theme_properties.background_texture_theme then
+        custom_theme.textures[DYNAMIC_TEXTURE.BACKGROUND] = background_texture_for_theme(theme_properties.background_texture_theme) or TEXTURE.DATA_TEXTURES_BG_CAVE_0
+        custom_theme:override(THEME_OVERRIDE.ENT_BACKWALL, theme_properties.background_texture_theme)
+    end
+
+    if theme_properties.background_texture then
+        custom_theme.textures[DYNAMIC_TEXTURE.BACKGROUND] = theme_properties.background_texture
+    end
+
+    if theme_properties.floor_theme then
+        custom_theme.textures[DYNAMIC_TEXTURE.FLOOR] = floor_texture_for_theme(theme_properties.floor_theme)
+        -- Spawns extra theme elements over the floor.
+        custom_theme:override(THEME_OVERRIDE.SPAWN_PROCEDURAL, theme_properties.floor_theme)
+    end
+    if theme_properties.floor_texture_theme then
+        custom_theme.textures[DYNAMIC_TEXTURE.FLOOR] = floor_texture_for_theme(theme_properties.floor_texture_theme)
+    end
+    if theme_properties.floor_texture then
+        custom_theme.textures[DYNAMIC_TEXTURE.FLOOR] = theme_properties.floor_texture
+    end
+    custom_theme.theme = theme_properties.theme
+    custom_theme.level_file = level_file
+
+    if theme_properties.post_configure then
+        theme_properties.post_configure(custom_theme, subtheme, theme_properties)
+    end
+    return custom_theme, subtheme
+end
+
+--- Load in a level file. d
+-- @param load_level_ctx ON.PRE_LOAD_LEVEL_FILES context to load the level file into.
+-- @param file_name name/path to the file to load.
+-- @param custom_theme Either a CustomTheme object or a table of parameters to configure a new CustomTheme.
+-- @param allowed_spawn_types Optional spawn types flags to allow certain types of procedural spawns to spawn without being eliminated.
+--
+-- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
+local function load_level_custom_theme(load_level_ctx, file_name, custom_theme, allowed_spawn_types)
+    local actual_custom_theme = nil
+    if custom_theme then
+        if type(custom_theme) == "userdata" and getmetatable(custom_theme).__type.name == "CustomTheme" then
+            actual_custom_theme = custom_theme
+        else
+            actual_custom_theme, subtheme = create_custom_theme(custom_theme, file_name)
+            if subtheme then force_custom_subtheme(subtheme) end
+            width = width or custom_theme.width
+            height = height or custom_theme.height
+        end
+    end
+
+    load_level(load_level_ctx, file_name, actual_custom_theme, allowed_spawn_types)
+end
+
+
+local CustomLevels = {
     state = custom_level_state,
-    load_level = load_level,
+    load_level = load_level_legacy,
+    load_level_custom_theme = load_level_custom_theme,
     unload_level = unload_level,
     ALLOW_SPAWN_TYPE = ALLOW_SPAWN_TYPE,
     set_directory = set_directory,
     set_hide_entrance = set_hide_entrance,
+    BORDER_THEME = BORDER_THEME,
+    GROWABLE_SPAWN_TYPE = GROWABLE_SPAWN_TYPE,
 }
+
+
+return CustomLevels
