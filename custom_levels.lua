@@ -2,7 +2,6 @@
 -- @module CustomLevels
 
 local custom_level_params = {
-    custom_levels_directory = 'CustomLevels',
     hide_entrance = true,
 }
 
@@ -111,10 +110,6 @@ local ALLOW_SPAWN_TYPE = {
     BACKLAYER_BATS = 4,
 }
 
-local function set_directory(directory)
-    custom_level_params.custom_levels_directory = directory
-end
-
 local function set_hide_entrance(hide_entrance)
     custom_level_params.hide_entrance = hide_entrance
 end
@@ -180,7 +175,6 @@ local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn
     custom_level_state.allowed_spawn_types = allowed_spawn_types
     custom_level_state.custom_theme = custom_theme
 
-    local custom_levels_directory = custom_level_params.custom_levels_directory
     function override_level(ctx)
         local level_files = {
             file_name,
@@ -393,6 +387,7 @@ local function floor_texture_for_theme(theme)
     end
     return TEXTURE.DATA_TEXTURES_FLOOR_CAVE_0
 end
+local aaab = false
 local function create_custom_theme(theme_properties, level_file)
     local theme = theme_properties.theme
     local subtheme = theme_properties.subtheme or theme_properties.co_subtheme
@@ -430,8 +425,13 @@ local function create_custom_theme(theme_properties, level_file)
             if theme_properties.height then state.height = theme_properties.height end
         end)
     end
-    custom_theme:post(THEME_OVERRIDE.SPAWN_LEVEL, function()
+    custom_theme:post(THEME_OVERRIDE.POST_PROCESS_LEVEL, function()
         if theme_properties.dont_spawn_growables then return end
+        if not aaab then
+            state.level_gen.themes[THEME.CITY_OF_GOLD]:spawn_traps()
+            aaab = true
+            return
+        end
         local growables = theme_properties.growables or theme_properties.enabled_growables or theme_properties.growable_spawn_types or GROWABLE_SPAWN_TYPE.ALL
         local poles = growables & GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES == GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES
         local chains = growables & GROWABLE_SPAWN_TYPE.CHAINS == GROWABLE_SPAWN_TYPE.CHAINS
@@ -537,17 +537,13 @@ local function load_level_custom_theme(load_level_ctx, file_name, custom_theme, 
 end
 
 
-local CustomLevels = {
+return {
     state = custom_level_state,
     load_level = load_level_legacy,
     load_level_custom_theme = load_level_custom_theme,
     unload_level = unload_level,
     ALLOW_SPAWN_TYPE = ALLOW_SPAWN_TYPE,
-    set_directory = set_directory,
     set_hide_entrance = set_hide_entrance,
     BORDER_THEME = BORDER_THEME,
     GROWABLE_SPAWN_TYPE = GROWABLE_SPAWN_TYPE,
 }
-
-
-return CustomLevels
