@@ -457,6 +457,7 @@ local function create_custom_theme(theme_properties, level_file)
         end
     end)
     custom_theme:post(THEME_OVERRIDE.SPAWN_EFFECTS, function()
+        if state.screen ~= SCREEN.LEVEL then return end
         if not theme_properties.dont_adjust_camera_focus then
             state.camera.adjusted_focus_x = state.level_gen.spawn_x
             state.camera.adjusted_focus_y = state.level_gen.spawn_y + 0.05
