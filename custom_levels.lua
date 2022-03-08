@@ -110,6 +110,7 @@ local removed_embedded_items = {
 local procedural_enemies = {
     ENT_TYPE.MONS_BAT,
     ENT_TYPE.MONS_HERMITCRAB,
+    ENT_TYPE.TADPOLE,
 }
 
 local ALLOW_SPAWN_TYPE = {
