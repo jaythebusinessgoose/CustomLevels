@@ -5,7 +5,7 @@ The level loading supports levels of any size up to 8x15, which is the max Spelu
 
 Each room must be created as a setroom template with the format `setroomy_x`. This is slightly different from the `setroomy-x` that the game uses for setrooms.
 
-The level file must be loaded in the ON.PRE_LOAD_LEVEL_FILES via the `load_level()` function, with the PRE_LOAD_LEVEL_FILES context passed in as the last parameter.
+The level file must be loaded in the ON.PRE_LOAD_LEVEL_FILES via the `load_level_custom_theme` function, or the legacy `load_level()` function, with the PRE_LOAD_LEVEL_FILES context passed in as a parameter.
 
 When loading a level that should not be overridden, such as the base camp, `unload_level()` can be called to clear the loaded level state.
 
@@ -13,18 +13,121 @@ Example:
 
 ```
 set_callback(function(ctx)
-    if state.theme == THEME.BASE_CAMP or state.theme == 0 then
+    if state.screen ~= SCREEN.LEVEL then
         custom_levels.unload_level()
     else
         local width, height = 4, 6
-        custom_levels.load_level('cool_level.lvl', width, height, ctx)
+        local theme_properties = {
+            theme = THEME.COSMIC_OCEAN,
+            subtheme = THEME.JUNGLE,
+        }
+        custom_levels.load_level_custom_theme(ctx, 'cool_level.lvl', theme_properties)
     end
 end, ON.PRE_LOAD_LEVEL_FILES)
 ```
 
-### Configuration
+## CustomTheme
 
-Due to the way level files are loaded in, some extra configuration is required if the CustomLevels package is relocated. If it is anywhere other than the root directory of the mod, or has a name other than CustomLevels, `set_directory` must be called, passing the path to the directory within the mod folder including the directory name. Eg, for `MyCoolMod/SweetFolder/CustomLevels/custom_levels.lua` call `custom_levels.set_directory('SweetFolder/CustomLevels')`.
+The theme parameter of the `load_level_custom_themes` can be either a CustomTheme object or a table of properties that will be used to configure a new CustomTheme.
+
+The theming table supports the following properties:
+
+* `theme` THEME \
+The base theme to load the level. This is the only required field, and everything else will revert to default values.
+* `subtheme` THEME \
+Subtheme to be used when the theme is COSMIC_OCEAN.
+* `border_type` BORDER_THEME \
+Enum value that configures what type of border to use.
+* `growable_spawn_types` GROWABLE_SPAWN_TYPE \
+Enum bitmask of the types of growables that will spawn.
+* `background_theme` THEME \
+Customize the background to look like the background of `background_theme`.
+* `floor_theme` THEME \
+Customize the floor textures to look like the floors of `floor_theme`.
+* `post_configure` function(CustomTheme, Subtheme) \
+Function that allows additional configuration of the CustomTheme that was created from the properties.
+
+Additional theming:
+* `border_theme` THEME \
+Allows more fine-grained theming compared to what `border_type` allows, theming the border to match the theme.
+* `border_entity_theme` THEME \
+Allows more fine-grained theming compared to what `border_type` allows, theming the entity of the border to match the theme.
+* `background_texture_theme` THEME \
+Allows more fine-grained theming of the background texture.
+* `background_texture` TEXTURE \
+Even more fine-grained than `background_texture_theme`, only overriding the texture itself.
+* `floor_texture_theme` THEME \
+Themes the floor texture without also affecting some other things that `floor_theme` affects.
+* `floor_texture` TEXTURE \
+Override the floor textures with a specific texture.
+
+
+Additional fields:
+* `dont_spawn_effects` Bool \
+Some spawn effects for the base theme may be undesired, so this will disable them.
+* `dont_init` Bool \
+Some initialization properties for the base theme may be undesired, so this will disable them.
+* `dont_spawn_growables` Bool \
+Like using `growable_spawn_types = GROWABLE_SPAWN_TYPE.NONE`, except also will not spawn sliding doors under slidingdoor_ceiling.
+* `dont_loop` Bool \
+This will allow cosmic ocean themes not to loop. (Untested)
+* `loop` Bool \
+This will allow non-cosmic ocean themes to loop. (Untested)
+* `dont_adjust_camera_focus` Bool \
+The camera normally focuses on the player at the start of the level. This disables that for customizable behavior.
+* `dont_adjust_camera_bounds` Bool \
+The camera bounds are normally changed for cosmic ocean themes. This disables that for customizable behavior.
+* `camera_bounds` AABB \
+Custom camera bounds to initialize the level with.
+
+### BORDER_THEME
+
+The BORDER_THEME enum configures both the type of border and the border entity.
+
+* `DEFAULT` \
+Defaults to the preferred border properties of the base theme.
+* `HARD_FLOOR` \
+Normal border as found in most themes.
+* `SUNKEN_CITY` \
+Normal border but with sunken city themed texture.
+* `NEO_BABYLON` \
+Normal border but with neo babylon themed texture.
+* `ICE_CAVES` \
+Border on top and both edges, but not on bottom, as found in the Ice Caves.
+* `ICE_SUNKEN` \
+Ice caves border, but with sunken city themed texture.
+* `ICE_BABY` \
+Ice caves border, but with neo babylon themed texture.
+* `DUAT` \
+Duat fog borders on sides with invisible border on top and bottom.
+* `TIAMAT` \
+Neo babylon themed borders with lasers embeded, as found in Tiamat's Throne.
+* `COSMIC_OCEAN` \
+Looping border, as found in Cosmic Ocean.
+* `NONE` \
+No border, the player may die when leaving the bounds.
+
+### GROWABLE_SPAWN_TYPE
+
+The GROWABLE_SPAWN_TYPE enum configures which growables will grow. Others will be left with just the root objects spawned.
+
+Growables are growable_vines, growable_poles, chain_ceiling, and chain_and_blocks_ceiling.
+
+* `NONE` \
+Do not spawn any growables.
+* `CHAINS` \
+Spawn chains from chain_ceiling and chains and blocks from chain_and_blocks_ceiling.
+* `TIDE_POOL_POLES` \
+Spawn poles up from growable_poles.
+* `VINES` \
+Spawn vines down from growable_vines.
+
+The GROWABLE_SPAWN_TYPE is a bitmask, so multiple spawn types can be chained, such as:
+GROWABLE_SPAWN_TYPE.CHAINS | GROWABLE_SPAWN_TYPE.VINES.
+
+The default, GROWABLE_SPAWN_TYPE.ALL, spawns all growables.
+
+Note: Due to technical limitations, chains and tide pool poles cannot be spawned without also spawning vines.
 
 ## Entrance Doors
 
@@ -46,7 +149,7 @@ manually spawned items exist. For some of these items, this means that tile code
 
 It should work to create a custom tile code to spawn in the entity and manually spawn it in the script.
 
-The following entities must be forced to spawn during level generation:
+The following entities may need to be forced to spawn during level generation:
 - ENT_TYPE.EMBED_GOLD
 - ENT_TYPE.EMBED_GOLD_BIG
 - ENT_TYPE.ITEM_RUBY
@@ -83,12 +186,13 @@ When loading a level, there is an optional last parameter that can be set to all
 - `PROCEDURAL` (Items in the level, such as gold, pots, crates, ghost pot, etc)
 - `EMBEDDED_CURRENCY` (Gold and gems embedded in the wall)
 - `EMBEDDED_ITEMS` (Items such as backpacks, weapons, and powerups embedded in the wall)
-- `BACKLAYER_BATS` (Bats that naturally spawn in back layers)
+- `PROCEDURAL_ENEMIES` (Enemies that spawn procedurally, such as)
 
 This will allow all spawns except for gold and gems embedded in the wall:
 ```
     local allowed_spawns = set_flag(0, custom_levels.ALLOW_SPAWN_TYPE.PROCEDURAL)
     allowed_spawns = set_flag(allowed_spawns, custom_levels.ALLOW_SPAWN_TYPE.EMBEDDED_ITEMS)
+    allowed_spawns = set_flag(allowed_spawns, custom_levels.ALLOW_SPAWN_TYPE.PROCEDURAL_ENEMIES)
     custom_levels.load_level(file_name, width, height, ctx, allowed_spawns)
 ```
 
@@ -201,3 +305,9 @@ Olmec is also crashing during the cutscene, you may need to spawn Olmec or disab
 ## Cosmic Ocean
 
 Haven't tested much. Loaded a level in and it seems to load fine in any subtheme. There are some weird things that go on if there isn't empty space along the looping edges.
+
+Spawning growables in the CO sometimes causes crashes.
+
+CO levels must have an exit door.
+
+CO levels must be at least 3x3.
