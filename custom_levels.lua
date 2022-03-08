@@ -168,13 +168,6 @@ local function unload_level()
     custom_level_state.entrance_remove_callback = nil
 end
 
---- Load in a level file. b
--- @param load_level_ctx ON.PRE_LOAD_LEVEL_FILES context to load the level file into.
--- @param file_name name/path to the file to load.
--- @param width Width of the level in the file.
--- @param height Height of the level in the file.
---
--- Note: This must be called in ON.PRE_LOAD_LEVEL_FILES with the load_level_ctx from that callback.
 local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn_types, width, height)
     allowed_spawn_types = allowed_spawn_types or 0
 
@@ -288,7 +281,7 @@ local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn
 end
 
 
---- Load in a level file. c
+--- Load in a level file.
 -- @param file_name name/path to the file to load.
 -- @param width Width of the level in the file.
 -- @param height Height of the level in the file.
@@ -419,30 +412,29 @@ local function create_custom_theme(theme_properties, level_file)
 
     local custom_theme = CustomTheme:new(custom_level_state.custom_theme_id, theme)
     custom_level_state.custom_theme_id = custom_level_state.custom_theme_id + 1
+    -- Spawning effects does things like changing the camera bounds in ice caves and spawning the duat bosses.
     if not theme_properties.dont_spawn_effects then
         custom_theme:override(THEME_OVERRIDE.SPAWN_EFFECTS, theme)
     end
     custom_theme:override(THEME_OVERRIDE.SPAWN_BORDER, border_theme)
     custom_theme:override(THEME_OVERRIDE.ENT_BORDER, border_entity_theme)
+    -- The INIT_LEVEL is required for some effects like duat fog to look proper, but it could do other things that may be
+    -- undesired, so it can be disabled.
     if not theme_properties.dont_init then
         custom_theme:override(THEME_OVERRIDE.INIT_LEVEL, border_theme)
     end
     if (border_theme == THEME.COSMIC_OCEAN and not theme_properties.dont_loop) or theme_properties.loop then
         custom_theme:override(THEME_OVERRIDE.LOOP, THEME.COSMIC_OCEAN)
     end
+    -- Some themes, such as cosmic ocean, do not get the level size from the level file, so it must be manually configured.
     if theme_properties.width or theme_properties.height then
         custom_theme:post(THEME_OVERRIDE.INIT_LEVEL, function()
             if theme_properties.width then state.width = theme_properties.width end
             if theme_properties.height then state.height = theme_properties.height end
         end)
     end
-    custom_theme:post(THEME_OVERRIDE.POST_PROCESS_LEVEL, function()
+    custom_theme:post(THEME_OVERRIDE.SPAWN_LEVEL, function()
         if theme_properties.dont_spawn_growables then return end
-        if not aaab then
-            state.level_gen.themes[THEME.CITY_OF_GOLD]:spawn_traps()
-            aaab = true
-            return
-        end
         local growables = theme_properties.growables or theme_properties.enabled_growables or theme_properties.growable_spawn_types or GROWABLE_SPAWN_TYPE.ALL
         local poles = growables & GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES == GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES
         local chains = growables & GROWABLE_SPAWN_TYPE.CHAINS == GROWABLE_SPAWN_TYPE.CHAINS
@@ -469,10 +461,13 @@ local function create_custom_theme(theme_properties, level_file)
     end)
     custom_theme:post(THEME_OVERRIDE.SPAWN_EFFECTS, function()
         if state.screen ~= SCREEN.LEVEL then return end
+        -- Adjust the camera focus at the start of the level so it does not jump.
         if not theme_properties.dont_adjust_camera_focus then
             state.camera.adjusted_focus_x = state.level_gen.spawn_x
             state.camera.adjusted_focus_y = state.level_gen.spawn_y + 0.05
         end
+        -- If a camera bounds property exists, set the camera bounds to those bounds. Otherwise, leave them alone except for
+        -- in a cosmic ocean theme, where the camera bounds should be set to the max distance.
         if theme_properties.camera_bounds then
             state.camera.bounds_left = theme_properties.camera_bounds.left
             state.camera.bounds_right = theme_properties.camera_bounds.right
@@ -524,7 +519,7 @@ local function create_custom_theme(theme_properties, level_file)
     return custom_theme, subtheme
 end
 
---- Load in a level file. d
+--- Load in a level file.
 -- @param load_level_ctx ON.PRE_LOAD_LEVEL_FILES context to load the level file into.
 -- @param file_name name/path to the file to load.
 -- @param custom_theme Either a CustomTheme object or a table of parameters to configure a new CustomTheme.
