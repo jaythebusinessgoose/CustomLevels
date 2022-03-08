@@ -64,6 +64,9 @@ local removed_procedural_spawns = {
 	ENT_TYPE.ITEM_GOLDBARS,
 	ENT_TYPE.ITEM_SKULL,
 	ENT_TYPE.MONS_SKELETON,
+	ENT_TYPE.ITEM_POTOFGOLD,
+	ENT_TYPE.MONS_LEPRECHAUN,
+	ENT_TYPE.DECORATION_POTOFGOLD_RAINBOW,
 }
 
 local removed_embedded_currencies = {
@@ -101,14 +104,22 @@ local removed_embedded_items = {
     ENT_TYPE.ITEM_MATTOCK,
     ENT_TYPE.ITEM_BOOMERANG,
     ENT_TYPE.ITEM_MACHETE,
+	ENT_TYPE.ITEM_POTOFGOLD,
+}
+
+local procedural_enemies = {
+    ENT_TYPE.MONS_BAT,
+    ENT_TYPE.MONS_HERMITCRAB,
 }
 
 local ALLOW_SPAWN_TYPE = {
     PROCEDURAL = 1,
     EMBEDDED_CURRENCY = 2,
     EMBEDDED_ITEMS = 3,
-    BACKLAYER_BATS = 4,
+    PROCEDURAL_ENEMIES = 4,
 }
+-- Keep old name in case it's being used.
+ALLOW_SPAWN_TYPE.BACKLAYER_BATS = ALLOW_SPAWN_TYPE.PROCEDURAL_ENEMIES
 
 local function set_hide_entrance(hide_entrance)
     custom_level_params.hide_entrance = hide_entrance
@@ -261,13 +272,13 @@ local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn
     end, SPAWN_TYPE.LEVEL_GEN_TILE_CODE, 0, removed_embedded_items)
 
     custom_level_state.bat_callback = set_post_entity_spawn(function(entity, spawn_type)
-        if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.BACKLAYER_BATS) then return end
+        if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.PROCEDURAL_ENEMIES) then return end
         -- Do not remove spawns from a script.
         if spawn_type & SPAWN_TYPE.SCRIPT ~= 0 then return end
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
         entity.flags = set_flag(entity.flags, ENT_FLAG.DEAD)
         entity:destroy()
-    end, SPAWN_TYPE.LEVEL_GEN_GENERAL, 0, ENT_TYPE.MONS_BAT)
+    end, SPAWN_TYPE.LEVEL_GEN_GENERAL, 0, procedural_enemies)
 
     custom_level_state.floor_spread_callback = set_post_entity_spawn(function(entity)
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
