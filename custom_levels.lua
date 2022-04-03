@@ -441,9 +441,13 @@ local function create_custom_theme(theme_properties, level_file)
         local chains = growables & GROWABLE_SPAWN_TYPE.CHAINS == GROWABLE_SPAWN_TYPE.CHAINS
         local vines = growables & GROWABLE_SPAWN_TYPE.VINES == GROWABLE_SPAWN_TYPE.VINES
         if (poles and chains and vines) or (poles and chains) then
-            -- Cannot have poles and chains without also including vines.
-            state.level_gen.themes[THEME.BASE_CAMP]:spawn_traps() -- Spawn chains and vines.
+            -- state.level_gen.themes[THEME.BASE_CAMP]:spawn_traps() -- Spawn chains and vines.
             state.level_gen.themes[THEME.TIDE_POOL]:spawn_traps() -- Spawn tide poles and sliding doors.
+            state.level_gen.themes[THEME.DUAT]:spawn_traps() -- Spawn chains.
+            state.level_gen.themes[THEME.JUNGLE]:spawn_traps() -- Spawn vines.
+        elseif poles and chains then
+            state.level_gen.themes[THEME.TIDE_POOL]:spawn_traps() -- Spawn tide poles and sliding doors.
+            state.level_gen.themes[THEME.DUAT]:spawn_traps() -- Spawn chains.
         elseif chains and vines then
             state.level_gen.themes[THEME.VOLCANA]:spawn_traps() -- Spawn chains and sliding doors.
             state.level_gen.themes[THEME.JUNGLE]:spawn_traps() -- Spawn vines.
