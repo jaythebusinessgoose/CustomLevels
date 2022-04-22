@@ -55,10 +55,7 @@ local removed_procedural_spawns = {
 	ENT_TYPE.ITEM_CURSEDPOT,
 	ENT_TYPE.ITEM_SAPPHIRE,
 	ENT_TYPE.ITEM_EMERALD,
-	ENT_TYPE.ITEM_WALLTORCH,
-    ENT_TYPE.ITEM_LITWALLTORCH,
 	ENT_TYPE.MONS_SCARAB,
-	ENT_TYPE.ITEM_AUTOWALLTORCH,
 	ENT_TYPE.ITEM_WEB,
 	ENT_TYPE.ITEM_GOLDBAR,
 	ENT_TYPE.ITEM_GOLDBARS,
@@ -67,6 +64,12 @@ local removed_procedural_spawns = {
 	ENT_TYPE.ITEM_POTOFGOLD,
 	ENT_TYPE.MONS_LEPRECHAUN,
 	ENT_TYPE.DECORATION_POTOFGOLD_RAINBOW,
+}
+
+local removed_torches = {
+    ENT_TYPE.ITEM_WALLTORCH,
+    ENT_TYPE.ITEM_LITWALLTORCH,
+    ENT_TYPE.ITEM_AUTOWALLTORCH,
 }
 
 local removed_embedded_currencies = {
@@ -118,6 +121,7 @@ local ALLOW_SPAWN_TYPE = {
     EMBEDDED_CURRENCY = 2,
     EMBEDDED_ITEMS = 3,
     PROCEDURAL_ENEMIES = 4,
+    PROCEDURAL_TORCHES = 5,
 }
 -- Keep old name in case it's being used.
 ALLOW_SPAWN_TYPE.BACKLAYER_BATS = ALLOW_SPAWN_TYPE.PROCEDURAL_ENEMIES
@@ -273,6 +277,16 @@ local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn
         entity.flags = set_flag(entity.flags, ENT_FLAG.DEAD)
         entity:destroy()
     end, SPAWN_TYPE.LEVEL_GEN_GENERAL, 0, procedural_enemies)
+
+    custom_level_state.procedural_spawn_callback = set_post_entity_spawn(function(entity, spawn_flags)
+        if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.PROCEDURAL_TORCHES) then return end
+        -- Do not remove spawns from a script.
+        if spawn_flags & SPAWN_TYPE.SCRIPT ~= 0 then return end
+        entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
+        entity.flags = set_flag(entity.flags, ENT_FLAG.DEAD)
+        move_entity(entity.uid, 1000, 0, 0, 0)
+        entity:destroy()
+    end, SPAWN_TYPE.LEVEL_GEN_GENERAL | SPAWN_TYPE.LEVEL_GEN_PROCEDURAL, 0, removed_torches)
 
     custom_level_state.floor_spread_callback = set_post_entity_spawn(function(entity)
         entity.flags = set_flag(entity.flags, ENT_FLAG.INVISIBLE)
