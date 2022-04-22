@@ -440,25 +440,34 @@ local function create_custom_theme(theme_properties, level_file)
         local poles = growables & GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES == GROWABLE_SPAWN_TYPE.TIDE_POOL_POLES
         local chains = growables & GROWABLE_SPAWN_TYPE.CHAINS == GROWABLE_SPAWN_TYPE.CHAINS
         local vines = growables & GROWABLE_SPAWN_TYPE.VINES == GROWABLE_SPAWN_TYPE.VINES
-        if poles and chains and vines then
+        local function grow_vines_both_layers()
+            grow_vines(LAYER.FRONT, 256)
+            grow_vines(LAYER.BACK, 256)
+        end
+        local function grow_poles_both_layers()
             grow_poles(LAYER.FRONT, 256)
             grow_poles(LAYER.BACK, 256)
-            state.level_gen.themes[THEME.JUNGLE]:spawn_traps() -- Spawn vines.
+        end
+        if poles and chains and vines then
+            grow_poles_both_layers()
+            grow_vines_both_layers()
             state.level_gen.themes[THEME.VOLCANA]:spawn_traps() -- Spawn chains and sliding doors.
         elseif poles and chains then
-            grow_poles(LAYER.FRONT, 256)
-            grow_poles(LAYER.BACK, 256)
+            grow_poles_both_layers()
             state.level_gen.themes[THEME.VOLCANA]:spawn_traps() -- Spawn chains and sliding doors.
         elseif chains and vines then
+            grow_vines_both_layers()
             state.level_gen.themes[THEME.VOLCANA]:spawn_traps() -- Spawn chains and sliding doors.
-            state.level_gen.themes[THEME.JUNGLE]:spawn_traps() -- Spawn vines.
         elseif vines and poles then
-            state.level_gen.themes[THEME.TIDE_POOL]:spawn_traps() -- Spawn tide poles and sliding doors.
-            state.level_gen.themes[THEME.JUNGLE]:spawn_traps() -- Spawn vines.
+            grow_poles_both_layers()
+            grow_vines_both_layers()
+            state.level_gen.themes[THEME.CITY_OF_GOLD]:spawn_traps() -- Spawn sliding doors.
         elseif vines then
-            state.level_gen.themes[THEME.EGGPLANT_WORLD]:spawn_traps() -- Spawn vines and sliding doors.
+            grow_vines_both_layers()
+            state.level_gen.themes[THEME.CITY_OF_GOLD]:spawn_traps() -- Spawn sliding doors.
         elseif poles then
-            state.level_gen.themes[THEME.TIDE_POOL]:spawn_traps() -- Spawn tide poles and sliding doors.
+            grow_poles_both_layers()
+            state.level_gen.themes[THEME.CITY_OF_GOLD]:spawn_traps() -- Spawn sliding doors.
         elseif chains then
             state.level_gen.themes[THEME.VOLCANA]:spawn_traps() -- Spawn chains and sliding doors.
         else
