@@ -64,6 +64,7 @@ local removed_procedural_spawns = {
 	ENT_TYPE.ITEM_POTOFGOLD,
 	ENT_TYPE.MONS_LEPRECHAUN,
 	ENT_TYPE.DECORATION_POTOFGOLD_RAINBOW,
+    ENT_TYPE.ITEM_REDLANTERN,
 }
 
 local removed_torches = {
