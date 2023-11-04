@@ -198,6 +198,7 @@ local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn
         force_custom_theme(custom_theme)
     end
     custom_level_state.room_generation_callback = set_callback(function(ctx)
+      if state.screen ~= SCREEN.LEVEL then return end
         if width and height then
             state.height = height
             state.width = width
