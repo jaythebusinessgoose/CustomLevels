@@ -524,6 +524,14 @@ local function create_custom_theme(theme_properties, level_file)
     if theme_properties.background_texture_theme then
         custom_theme.textures[DYNAMIC_TEXTURE.BACKGROUND] = background_texture_for_theme(theme_properties.background_texture_theme) or TEXTURE.DATA_TEXTURES_BG_CAVE_0
         custom_theme:override(THEME_OVERRIDE.ENT_BACKWALL, theme_properties.background_texture_theme)
+        local previous_subtheme
+        custom_theme:pre(THEME_OVERRIDE.SPAWN_BACKGROUND, function()
+            previous_subtheme = custom_theme.sub_theme
+            force_custom_subtheme(theme_properties.background_texture_theme)
+        end)
+        custom_theme:post(THEME_OVERRIDE.SPAWN_BACKGROUND, function()
+            force_custom_subtheme(previous_subtheme)
+        end)
     end
 
     if theme_properties.background_texture then
