@@ -2,7 +2,7 @@
 -- @module CustomLevels
 
 local custom_level_params = {
-    hide_entrance = true,
+    hide_entrance = false,
 }
 
 local custom_level_state = {
