@@ -12,6 +12,7 @@ local custom_level_state = {
     height = nil,
     room_generation_callback = nil,
     procedural_spawn_callback = nil,
+    procedural_torches_spawn_callback = nil,
     embedded_currency_callback = nil,
     embedded_item_callback = nil,
     floor_spread_callback = nil,
@@ -148,6 +149,10 @@ local function unload_level()
         clear_callback(custom_level_state.procedural_spawn_callback)
     end
     custom_level_state.procedural_spawn_callback = nil
+    if custom_level_state.procedural_torches_spawn_callback then
+        clear_callback(custom_level_state.procedural_torches_spawn_callback)
+    end
+    custom_level_state.procedural_torches_spawn_callback = nil
     if custom_level_state.embedded_currency_callback then
         clear_callback(custom_level_state.embedded_currency_callback)
     end
@@ -280,7 +285,7 @@ local function load_level(load_level_ctx, file_name, custom_theme, allowed_spawn
         entity:destroy()
     end, SPAWN_TYPE.LEVEL_GEN_GENERAL, 0, procedural_enemies)
 
-    custom_level_state.procedural_spawn_callback = set_post_entity_spawn(function(entity, spawn_flags)
+    custom_level_state.procedural_torches_spawn_callback = set_post_entity_spawn(function(entity, spawn_flags)
         if test_flag(custom_level_state.allowed_spawn_types, ALLOW_SPAWN_TYPE.PROCEDURAL_TORCHES) then return end
         -- Do not remove spawns from a script.
         if spawn_flags & SPAWN_TYPE.SCRIPT ~= 0 then return end
